@@ -57,14 +57,39 @@ size = 1
 while findnxn(ss,size): 
     size *= 2
 
-reds = []
+orgreds = []
+allreds = []
+sizes = []
 while size > 1: #1 because dividing by 2 will never get us to 0
     size /= 2
     corners, ss = findnxns(ss,math.ceil(size))
-    reds += [(x+size/2, y+size/2) for (x,y) in corners]
+    sizes += [[size,len(corners)]]
+    targets = [(x+size/2, y+size/2) for (x,y) in corners]
+    orgreds += [(size,targets)]
+    allreds += targets
+
+avgsize = sum([x[0] * x[1] for x in sizes])/len(allreds)
 
 def dist(p1, p2): return math.sqrt(math.pow(p1[0] - p2[0], 2) + math.pow(p1[1] - p2[1], 2))
 def distpos(p): return dist(p, pos)
+
+reds = allreds
 reds = sorted(reds, key=distpos)
-for r in reds:
-    pyautogui.click(x = r[0], y= r[1])
+targets = [[False, x] for x in reds]
+for t in targets:
+    if not t[0]:
+        pyautogui.click(x = t[1][0], y= t[1][1])
+        for x in targets:
+            if dist(t[1], x[1]) < avgsize*4:
+                x[0] = True
+
+# for orgred in orgreds:
+#     reds = orgred[1]
+#     reds = sorted(reds, key=distpos)
+#     targets = [[False, x] for x in reds]
+#     for t in targets:
+#         if not t[0]:
+#             pyautogui.click(x = t[1][0], y= t[1][1])
+#             for x in targets:
+#                 if dist(t[1], x[1]) < avgsize*8:
+#                     x[0] = True
