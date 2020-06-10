@@ -71,16 +71,21 @@ while size > 1: #1 because dividing by 2 will never get us to 0
 avgsize = sum([x[0] * x[1] for x in sizes])/len(allreds)
 
 def dist(p1, p2): return math.sqrt(math.pow(p1[0] - p2[0], 2) + math.pow(p1[1] - p2[1], 2))
+def arcdist(p1, p2): return math.atan2(p1[0] - p2[0], p1[1] - p2[1])
 def distpos(p): return dist(p, pos)
+def arcdistpos(p): return arcdist(p, pos)
 
 reds = allreds
-reds = sorted(reds, key=distpos)
+reds = sorted(reds, key=arcdistpos)
 targets = [[False, x] for x in reds]
+
+pyautogui.PAUSE = .2
+
 for t in targets:
     if not t[0]:
         pyautogui.click(x = t[1][0], y= t[1][1])
         for x in targets:
-            if dist(t[1], x[1]) < avgsize*4:
+            if dist(t[1], x[1]) < avgsize*2:
                 x[0] = True
 
 # for orgred in orgreds:
