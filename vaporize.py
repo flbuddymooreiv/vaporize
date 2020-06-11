@@ -78,7 +78,7 @@ while size > 1: #1 because dividing by 2 will never get us to 0
     size /= 2
     corners, ss = findnxns(ss,math.ceil(size))
     sizes += [[size,len(corners)]]
-    targets = [(x+size/2, y+size/2) for (x,y) in corners]
+    targets = [(x, y) for (x,y) in corners]
     orgreds += [(size,targets)]
     allreds += targets
 
