@@ -79,13 +79,13 @@ reds = allreds
 reds = sorted(reds, key=arcdistpos)
 targets = [[False, x] for x in reds]
 
-pyautogui.PAUSE = .2
+pyautogui.PAUSE = .1
 
 for t in targets:
     if not t[0]:
         pyautogui.click(x = t[1][0], y= t[1][1])
         for x in targets:
-            if dist(t[1], x[1]) < avgsize*2:
+            if dist(t[1], x[1]) < avgsize*4:
                 x[0] = True
 
 # for orgred in orgreds:
