@@ -4,6 +4,9 @@ import math
 import pyautogui
 from PIL import Image
 
+
+INVERSE_OVERKILL_FACTOR = 4 #higher number overkills less. 
+                            #Helps tune for zoom level
 ss = pyautogui.screenshot()
 ss = ss.crop((0,0,1672,919))
 ss.save('ss.png')
@@ -85,7 +88,7 @@ for t in targets:
     if not t[0]:
         pyautogui.click(x = t[1][0], y= t[1][1])
         for x in targets:
-            if dist(t[1], x[1]) < avgsize*4:
+            if dist(t[1], x[1]) < avgsize*INVERSE_OVERKILL_FACTOR:
                 x[0] = True
 
 # for orgred in orgreds:
