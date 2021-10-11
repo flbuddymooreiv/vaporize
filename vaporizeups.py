@@ -11,8 +11,8 @@ import pytesseract
 import numpy as np
 import cv2
 
-pyautogui.PAUSE = 0.1
-UPS_THRESHOLD=25
+pyautogui.PAUSE = 0.5
+UPS_THRESHOLD=30
 
 pos = pyautogui.mouseinfo.position()
 
@@ -96,14 +96,14 @@ def loop():
     weightedextents = sum([k * len(extents[k][0]) for k in extents.keys()])
     totalpoints = sum([len(extents[k][0]) for k in extents.keys()])
 
-    threshextent = (weightedextents / totalpoints * 0.66) if totalpoints else 0
+    threshextent = weightedextents/totalpoints/2 if totalpoints else 0
 
     #random.shuffle(clicks)
     #clicks = clicks[:10]
 
-    clicks = clicks[:500]
+    clicks = clicks[:100]
     random.shuffle(clicks)
-    clicks = clicks[:50]
+    clicks = clicks[:10]
 
     print(clicks)
 
