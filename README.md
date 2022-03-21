@@ -8,6 +8,9 @@ This will immediately take a screenshot and click everything red within the crop
 # Requirements
 
 `pip3 install pyautogui`
+`pip3 install pytesseract`
+`pip3 install numpy`
+`pip3 install opencv-python`
 
 If you need to use a different crop region, you can change the first couple of lines of the pyautogui screenshot command.
 
