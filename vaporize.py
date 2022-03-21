@@ -5,118 +5,172 @@ import math
 import pyautogui
 
 import random
-from PIL import Image
+from PIL import Image, ImageChops
 
 import pytesseract
 import numpy as np
 import cv2
 
-pyautogui.PAUSE = 0.1
+pyautogui.PAUSE = 0.05
 UPS_THRESHOLD=25
+# set this to true for long running sessions
+afk_mode = False 
+#afk_mode = True
 
-pos = pyautogui.mouseinfo.position()
+
+origpos = pyautogui.mouseinfo.position()
 
 def dist(p1, p2): return math.sqrt(math.pow(p1[0] - p2[0], 2) + math.pow(p1[1] - p2[1], 2))
 def arcdist(p1, p2): return math.atan2(p1[0] - p2[0], p1[1] - p2[1])
-def distpos(p): return dist(p, pos)
-def arcdistpos(p): return arcdist(p, pos)
+def distpos(p): return dist(p, origpos)
+def arcdistpos(p): return arcdist(p, origpos)
+def extentsize(p): return math.sqrt((p[2] ** 2) + (p[3] ** 2))
+def extentsizethenarcdistpos(p): return (extentsize(p) * 10000) + arcdistpos(p)
 
-
-def ok_to_shoot():
+def get_ups():
+    data = None
     with open('/home/buddy/vaporize/ups.txt', 'r') as f:
         data = f.read()
+    return data
+
+def parse_ups(data):
+    try:
+        nums = data.split(' ')[2]
+        fps = float(nums.split('/')[0])
+        ups = float(nums.split('/')[1])
+        return (fps,ups)
+    except Exception as e:
+        print(e)
+        pass
+    return (-1,-1)
+        
+
+def ok_to_shoot():
+    # uncomment to override
+    return True
+
+    data = get_ups()
     if data:
-        try:
-            nums = data.split(' ')[2]
-            fps = float(nums.split('/')[0])
-            ups = float(nums.split('/')[1])
-            print(fps, ups)
-            return ups > UPS_THRESHOLD and fps > .33 * ups
-        except Exception as e:
-            print(e)
-            pass
+        (fps,ups) = parse_ups(data)
+        return ups > UPS_THRESHOLD and fps > .33 * ups
     return False
 
+currss = None 
+prevss = None
+
 def loop():
-    ss = pyautogui.screenshot()
-    ss = ss.crop((0,0,1665,919))
-    #ss.save('ss.png')
+    global currss, prevss
+    data = get_ups()
+    #(fps,ups) = parse_ups(data)
 
-    def enoughredpixel(p):
-        return p[0] >= 96 and p[1] < 32 and p[2] < 32
-    def enoughred(region,x,y):
-        try:
-            return enoughredpixel(region.getpixel((x,y)))
-        except:
-            return False
+    #if fps<0: return
 
-    pixels = []
-    bigpixels = []
-    biggerpixels = []
-    region = ss
-    extents = {}
+    def sleep():
+        #time.sleep(0.2/float(fps))
+        time.sleep(0.05)
+        
+    pos = pyautogui.mouseinfo.position()
+    pyautogui.moveTo(1910,1070)
+    sleep()
 
-    def putp(r, x, y, c=(0,255,0,0)):
-        try:
-            r.putpixel(x,y,c)
-        except:
-            pass
+    prevss = currss
+    currss = pyautogui.screenshot()
 
-    for i in range(0,math.floor(region.width)-1):
-        for j in range(0,math.floor(region.height)-1):
-            extent = 0
-            fits = True
+    if prevss and currss:
+        ss = ImageChops.subtract(currss, prevss)
+        ss = ImageChops.subtract(currss, ss)
+        pyautogui.moveTo(pos)
+        ss = ss.crop((0,0,1665,919))
+        #ss.save('ss.png')
 
-            while fits:
-                if \
-                   enoughred(region, i + extent, j) or \
-                   enoughred(region, i - extent, j) or \
-                   enoughred(region, i, j + extent) or \
-                   enoughred(region, i, j - extent): 
+        def enoughredpixel(p):
+            return p[0] >= 96 and p[1] < 32 and p[2] < 32
+        def enoughred(region,x,y):
+            try:
+                return enoughredpixel(region.getpixel((x,y)))
+            except Exception as e:
+                print(e)
+                return False
 
-                    extent += 1
-                else:
-                    fits = False
-                    if extent > 0:
-                        region.paste((0,255,0,0), [i-extent,j-extent,i+extent,j+extent])
+        pixels = []
+        bigpixels = []
+        biggerpixels = []
+        region = ss
+        extents = {}
 
-                        if extent not in extents: extents[extent] = []
-                        extents[extent] += [[i,j]]
+        def putp(r, x, y, c=(0,255,0,0)):
+            try:
+                r.putpixel(x,y,c)
+            except Exception as e:
+                print(e)
+                pass
 
-    #region.save('parsed.jpg')
+        for i in range(0,math.floor(region.width)-1):
+            for j in range(0,math.floor(region.height)-1):
+                extent = 0
+                extentx = 0
+                extenty = 0
+                fits = True
 
-    clicks = [c for l in list(extents.values()) for c in l ]
-    #clicks = sorted(clicks, key=arcdistpos)
-    clicks = sorted(clicks, key=distpos)
-    extentmap = {}
-    for k in extents:
-        for p in extents[k]:
-            extentmap[str(p)] = k
+                while fits:
+                    if enoughred(region, i + extentx, j):
+                        extentx += 1
+                    if enoughred(region, i, j + extenty):
+                        extenty += 1
+                    else:
+                        fits = False
+                        if extentx > 0 or extenty > 0:
+                            region.paste((0,255,0,0), [i,j,i+extentx,j+extenty])
 
-    weightedextents = sum([k * len(extents[k][0]) for k in extents.keys()])
-    totalpoints = sum([len(extents[k][0]) for k in extents.keys()])
+                            extent = math.sqrt(extentx * extentx + extenty * extenty)
 
-    threshextent = (weightedextents / totalpoints * 0.66) if totalpoints else 0
+                            if extent not in extents: extents[extent] = []
+                            extents[extent] += [[i,j,extentx,extenty]]
 
-    #random.shuffle(clicks)
-    #clicks = clicks[:10]
+        #region.save('parsed.jpg')
 
-    clicks = clicks[:500]
-    random.shuffle(clicks)
-    clicks = clicks[:50]
+        clicks = [c for l in list(extents.values()) for c in l ]
+        if afk_mode:
+            clicks = sorted(clicks, key=distpos)
+        else:
+            clicks = sorted(clicks, key=extentsize)
+            clicks = list(reversed(clicks))[:math.floor(len(clicks) * .33)]
+            clicks = sorted(clicks, key=arcdistpos)
+            #clicks = sorted(clicks, key=arcdistpos)
+            #clicks = reversed(sorted(clicks, key=extentsize))
+        extentmap = {}
+        for k in extents:
+            for p in extents[k]:
+                extentmap[str(p)] = k
 
-    print(clicks)
+        weightedextents = sum([k * len(extents[k][0]) for k in extents.keys()])
+        totalpoints = sum([len(extents[k][0]) for k in extents.keys()])
 
-    for c in clicks:
-        pyautogui.click(x = c[0], y= c[1])
-        extent = extentmap[str(c)]
-        if extent > threshextent:
-            for i in range(0, int(extent/threshextent) + 1):
-                for j in range(0, int(extent/threshextent) + 1):
-                    pyautogui.click(x = c[0] + i * threshextent, y= c[1] + j * threshextent)
-    pyautogui.moveTo(pos)
+        threshextent = (weightedextents / totalpoints * 0.33) if totalpoints else 0
 
+        if afk_mode:
+            clicks = clicks[:int(len(clicks)/5)]
+            random.shuffle(clicks)
+            clicks = clicks[:10]
 
-while True:
-    if ok_to_shoot(): loop()
-    time.sleep(1)
+        for c in clicks:
+            extent = extentmap[str(c)]
+            print(c)
+            #if extent > threshextent:
+            pyautogui.click(x=c[0] + c[2]/2, y=c[1] + c[3]/2)
+            # sleep()
+            #extent = extentmap[str(c)]
+            #if extent > threshextent:
+            #    for i in range(0, int(extent/threshextent) + 1):
+            #        for j in range(0, int(extent/threshextent) + 1):
+            #            pyautogui.click(x = c[0] + i * threshextent, y= c[1] + j * threshextent)
+
+        #pyautogui.moveTo(pos)
+
+if afk_mode:
+    while True:
+        if ok_to_shoot(): loop()
+        time.sleep(.1)
+else:
+    loop()
+    loop()
