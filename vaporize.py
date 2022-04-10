@@ -6,6 +6,7 @@ import pyautogui
 
 import random
 from PIL import Image, ImageChops
+from enum import Enum
 
 import pytesseract
 import numpy as np
@@ -13,10 +14,16 @@ import cv2
 
 pyautogui.PAUSE = 0.05
 UPS_THRESHOLD=25
-# set this to true for long running sessions
-afk_mode = False 
-#afk_mode = True
 
+
+class Mode(Enum):
+    ONE_THIRD_ARC_SWEEP = 1
+    AFK_GRIND = 2
+    TWO_THIRD_ARC_SWEEP = 3
+    NINETY_PCT_ARC_SWEEP = 4
+
+#mode = Mode.ONE_THIRD_ARC_SWEEP
+mode = Mode.AFK_GRIND
 
 origpos = pyautogui.mouseinfo.position()
 
@@ -130,11 +137,19 @@ def loop():
         #region.save('parsed.jpg')
 
         clicks = [c for l in list(extents.values()) for c in l ]
-        if afk_mode:
+        if mode == Mode.AFK_GRIND:
             clicks = sorted(clicks, key=distpos)
         else:
+            portion = 1
+            if mode == Mode.NINETY_PCT_ARC_SWEEP:
+                portion = 0.90
+            elif mode == Mode.TWO_THIRD_ARC_SWEEP:
+                portion = 0.66
+            elif mode == Mode.ONE_THIRD_ARC_SWEEP:
+                portion = 0.33
+
             clicks = sorted(clicks, key=extentsize)
-            clicks = list(reversed(clicks))[:math.floor(len(clicks) * .33)]
+            clicks = list(reversed(clicks))[:math.floor(len(clicks) * portion)]
             clicks = sorted(clicks, key=arcdistpos)
             #clicks = sorted(clicks, key=arcdistpos)
             #clicks = reversed(sorted(clicks, key=extentsize))
@@ -148,14 +163,14 @@ def loop():
 
         threshextent = (weightedextents / totalpoints * 0.33) if totalpoints else 0
 
-        if afk_mode:
+        if mode == Mode.AFK_GRIND:
             clicks = clicks[:int(len(clicks)/5)]
             random.shuffle(clicks)
             clicks = clicks[:10]
 
         for c in clicks:
             extent = extentmap[str(c)]
-            print(c)
+            #print(c)
             #if extent > threshextent:
             pyautogui.click(x=c[0] + c[2]/2, y=c[1] + c[3]/2)
             # sleep()
@@ -167,7 +182,7 @@ def loop():
 
         #pyautogui.moveTo(pos)
 
-if afk_mode:
+if mode == Mode.AFK_GRIND:
     while True:
         if ok_to_shoot(): loop()
         time.sleep(.1)
