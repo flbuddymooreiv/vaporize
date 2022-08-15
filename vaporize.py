@@ -22,6 +22,8 @@ class Mode(Enum):
     TWO_THIRD_ARC_SWEEP = 3
     NINETY_PCT_ARC_SWEEP = 4
 
+#mode = Mode.NINETY_PCT_ARC_SWEEP
+#mode = Mode.TWO_THIRD_ARC_SWEEP
 #mode = Mode.ONE_THIRD_ARC_SWEEP
 mode = Mode.AFK_GRIND
 
@@ -34,6 +36,11 @@ def arcdistpos(p): return arcdist(p, origpos)
 def extentsize(p): return math.sqrt((p[2] ** 2) + (p[3] ** 2))
 def extentsizethenarcdistpos(p): return (extentsize(p) * 10000) + arcdistpos(p)
 
+def sleep():
+    #time.sleep(0.2/float(fps))
+    #time.sleep(0.05)
+    time.sleep(0.01)
+    
 def get_ups():
     data = None
     with open('/home/buddy/vaporize/ups.txt', 'r') as f:
@@ -72,10 +79,6 @@ def loop():
 
     #if fps<0: return
 
-    def sleep():
-        #time.sleep(0.2/float(fps))
-        time.sleep(0.05)
-        
     pos = pyautogui.mouseinfo.position()
     pyautogui.moveTo(1910,1070)
     sleep()
@@ -138,7 +141,14 @@ def loop():
 
         clicks = [c for l in list(extents.values()) for c in l ]
         if mode == Mode.AFK_GRIND:
-            clicks = sorted(clicks, key=distpos)
+            n = len(clicks)
+            #clicks = sorted(clicks, key=distpos)
+            #clicks = clicks[:int(len(clicks)/3)]
+            clicks = list(reversed(sorted(clicks, key=extentsize)))
+            #clicks = clicks[:int(len(clicks)/8)]
+            #random.shuffle(clicks)
+            clicks = clicks[:int(math.sqrt(n))]
+            clicks = sorted(clicks, key=arcdistpos)
         else:
             portion = 1
             if mode == Mode.NINETY_PCT_ARC_SWEEP:
@@ -146,13 +156,13 @@ def loop():
             elif mode == Mode.TWO_THIRD_ARC_SWEEP:
                 portion = 0.66
             elif mode == Mode.ONE_THIRD_ARC_SWEEP:
-                portion = 0.33
+                portion = 0.16
 
             clicks = sorted(clicks, key=extentsize)
             clicks = list(reversed(clicks))[:math.floor(len(clicks) * portion)]
             clicks = sorted(clicks, key=arcdistpos)
             #clicks = sorted(clicks, key=arcdistpos)
-            #clicks = reversed(sorted(clicks, key=extentsize))
+            #clicks = reversed(sorted(clicks, key=axtentsize))
         extentmap = {}
         for k in extents:
             for p in extents[k]:
@@ -162,11 +172,6 @@ def loop():
         totalpoints = sum([len(extents[k][0]) for k in extents.keys()])
 
         threshextent = (weightedextents / totalpoints * 0.33) if totalpoints else 0
-
-        if mode == Mode.AFK_GRIND:
-            clicks = clicks[:int(len(clicks)/5)]
-            random.shuffle(clicks)
-            clicks = clicks[:10]
 
         for c in clicks:
             extent = extentmap[str(c)]
