@@ -17,6 +17,8 @@ This will immediately take a screenshot and click everything red within the crop
 
 `pip3 install pillow`
 
+`sudo apt-get install scrot`
+
 
 If you need to use a different crop region, you can change the first couple of lines of the pyautogui screenshot command.
 
