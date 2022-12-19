@@ -20,12 +20,14 @@ class Mode(Enum):
     ONE_THIRD_ARC_SWEEP = 1
     AFK_GRIND = 2
     TWO_THIRD_ARC_SWEEP = 3
-    NINETY_PCT_ARC_SWEEP = 4
+    ONE_HALF_ARC_SWEEP = 4
+    NINETY_PCT_ARC_SWEEP = 5
 
 #mode = Mode.NINETY_PCT_ARC_SWEEP
 #mode = Mode.TWO_THIRD_ARC_SWEEP
-#mode = Mode.ONE_THIRD_ARC_SWEEP
-mode = Mode.AFK_GRIND
+mode = Mode.ONE_THIRD_ARC_SWEEP
+#mode = Mode.ONE_HALF_ARC_SWEEP
+#mode = Mode.AFK_GRIND
 
 origpos = pyautogui.mouseinfo.position()
 
@@ -42,6 +44,7 @@ def sleep():
     time.sleep(0.01)
     
 def get_ups():
+    return 60
     data = None
     with open('/home/buddy/vaporize/ups.txt', 'r') as f:
         data = f.read()
@@ -155,8 +158,10 @@ def loop():
                 portion = 0.90
             elif mode == Mode.TWO_THIRD_ARC_SWEEP:
                 portion = 0.66
+            elif mode == Mode.ONE_HALF_ARC_SWEEP:
+                portion = 0.5
             elif mode == Mode.ONE_THIRD_ARC_SWEEP:
-                portion = 0.16
+                portion = 0.33
 
             clicks = sorted(clicks, key=extentsize)
             clicks = list(reversed(clicks))[:math.floor(len(clicks) * portion)]
