@@ -15,11 +15,13 @@ import cv2
 pyautogui.PAUSE = 0.05
 UPS_THRESHOLD=25
 
-origpos = pyautogui.mouseinfo.position()
-
 ss = pyautogui.screenshot()
 fifthwidth = ss.width/5
 fifthheight = ss.height/5
+
+origpos = pyautogui.mouseinfo.position()
+origpos = [ origpos[0] - fifthwidth, origpos[1] - fifthheight ]
+
 def zoneviz():
     global fifthwidth, fifthheight
     pyautogui.moveTo(fifthwidth, fifthheight)
