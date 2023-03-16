@@ -5,7 +5,7 @@ set up a hotkey or an emergency kill command such as follows:
 
 `pkill -if 'python.*vaporize'`
 
-This will immediately take a screenshot and click everything red within the cropped region. Collision detection is done based on average red target size so as to conserve ammunition. Targets are sorted by distance from the mouse position when the program is invoked. Use a program like `xpad` (think sticky notes or masking tape) to mask off parts of the screen that you don't want shot. `sleep` is used to give time to move from console to `factorio` and equip the artillery remote control. Alternately, you may keybind your window manager to execute the script. It can also be helpful to bind another key combination to kill the process if your birrage goes awry or if you want to give the biters (or your defenses) a break.
+Vaporize will take a screenshot and click everything red within the cropped region. Collision detection is done based on average red target size so as to conserve ammunition. Targets are sorted by distance from the mouse position when the program is invoked. Use a program like `xpad` (think sticky notes or masking tape) to mask off parts of the screen that you don't want shot. `sleep` is used to give time to move from console to `factorio` and equip the artillery remote control. Alternately, you may keybind your window manager to execute the script. It can also be helpful to bind another key combination to kill the process if your birrage goes awry or if you want to give the biters (or your defenses) a break.
 
 # Requirements
 
