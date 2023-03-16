@@ -15,6 +15,21 @@ import cv2
 pyautogui.PAUSE = 0.05
 UPS_THRESHOLD=25
 
+origpos = pyautogui.mouseinfo.position()
+
+ss = pyautogui.screenshot()
+fifthwidth = ss.width/5
+fifthheight = ss.height/5
+def zoneviz():
+    global fifthwidth, fifthheight
+    pyautogui.moveTo(fifthwidth, fifthheight)
+    time.sleep(.1)
+    pyautogui.moveTo(fifthwidth * 4, fifthheight)
+    time.sleep(.1)
+    pyautogui.moveTo(fifthwidth * 4, fifthheight * 4)
+    time.sleep(.1)
+    pyautogui.moveTo(fifthwidth, fifthheight * 4)
+    time.sleep(.1)
 
 class Mode(Enum):
     ONE_THIRD_ARC_SWEEP = 1
@@ -28,8 +43,6 @@ class Mode(Enum):
 mode = Mode.ONE_THIRD_ARC_SWEEP
 #mode = Mode.ONE_HALF_ARC_SWEEP
 #mode = Mode.AFK_GRIND
-
-origpos = pyautogui.mouseinfo.position()
 
 def dist(p1, p2): return math.sqrt(math.pow(p1[0] - p2[0], 2) + math.pow(p1[1] - p2[1], 2))
 def arcdist(p1, p2): return math.atan2(p1[0] - p2[0], p1[1] - p2[1])
@@ -83,17 +96,18 @@ def loop():
     #if fps<0: return
 
     pos = pyautogui.mouseinfo.position()
-    pyautogui.moveTo(1910,1070)
+    pyautogui.moveTo(fifthwidth * 4, fifthheight * 4)
     sleep()
 
     prevss = currss
     currss = pyautogui.screenshot()
 
     if prevss and currss:
+        # black out the differences so we only see stationary targets
         ss = ImageChops.subtract(currss, prevss)
         ss = ImageChops.subtract(currss, ss)
         pyautogui.moveTo(pos)
-        ss = ss.crop((0,0,1665,919))
+        ss = ss.crop((fifthwidth,fifthheight,fifthwidth * 4,fifthheight * 4))
         #ss.save('ss.png')
 
         def enoughredpixel(p):
@@ -182,7 +196,9 @@ def loop():
             extent = extentmap[str(c)]
             #print(c)
             #if extent > threshextent:
-            pyautogui.click(x=c[0] + c[2]/2, y=c[1] + c[3]/2)
+            pyautogui.click(
+                x = fifthwidth + (c[0] + c[2]/2), 
+                y = fifthheight + (c[1] + c[3]/2))
             # sleep()
             #extent = extentmap[str(c)]
             #if extent > threshextent:
@@ -192,10 +208,22 @@ def loop():
 
         #pyautogui.moveTo(pos)
 
+zoneviz()
+zoneviz()
+zoneviz()
+zoneviz()
+zoneviz()
+zoneviz()
+zoneviz()
+zoneviz()
+zoneviz()
+zoneviz()
+
 if mode == Mode.AFK_GRIND:
     while True:
         if ok_to_shoot(): loop()
         time.sleep(.1)
 else:
+    #first loop primes first screenshot for comparison
     loop()
     loop()
